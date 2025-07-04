@@ -1,6 +1,13 @@
+import dbm
 import os
+
+from dotenv import load_dotenv
 from slack_bolt import App
 from slack_bolt.adapter.socket_mode import SocketModeHandler
+
+from utility import is_user_channel_manager
+
+load_dotenv()
 
 # Initializes your app with your bot token and socket mode handler
 app = App(
@@ -8,42 +15,54 @@ app = App(
 )
 
 
-# Listens to incoming messages that contain "hello"
-@app.message("hello")
-def message_hello(message, say):
-    # say() sends a message to the channel where the event was triggered
-    say(
-        blocks=[
-            {
-                "type": "section",
-                "text": {"type": "mrkdwn", "text": f"Wassup <@{message['user']}>?"},
-                "accessory": {
-                    "type": "button",
-                    "text": {"type": "plain_text", "text": "Nothin' just chillin'"},
-                    "action_id": "button_click"
-                }
-            }
-        ],
-        text=f"Hey there <@{message['user']}>!"
-    )
-
-
-@app.action("button_click")
-def action_button_click(body, ack, say):
-    # Acknowledge the action
+@app.command("/ban-word")
+def ban_word(ack, command, respond, client, body):
+    """
+    Bans a word, but only if the user is a channel manager.
+    Permissions are cached for 5 minutes.
+    """
     ack()
-    say(f"Same here <@{body['user']['id']}>")
+    user_id = body["user_id"]
+    channel_id = body["channel_id"]
+
+    is_manager, error_occurred = is_user_channel_manager(client, user_id, channel_id)
+
+    if error_occurred:
+        respond("Sorry, the service is currently busy due to high traffic. Please try again in a moment.")
+        return
+
+    if not is_manager:
+        respond(
+            "Sorry, you are not authorized to use this command. If your permissions recently changed, please try again in 5 minutes")
+        return
+
+    with dbm.open("banned_words.db", "c") as db:
+        word = command["text"].strip()
+        if not word:
+            respond("Please provide a word to ban.")
+            return
+        if word in db:
+            respond(f"The word '{word}' is already banned.")
+        else:
+            db[word] = "banned"
+            respond(f"The word '{word}' has been banned.")
 
 
-# Listens for messages containing "knock knock" and responds with an italicized "who's there?"
-@app.message("knock knock")
-def ask_who(message, say):
-    say("_Who's there?_")
+@app.message()
+def handle_message_events(logger, message, say):
+    """
+    Handles incoming messages and checks for banned words.
+    """
+    with dbm.open("banned_words.db", "c") as db:
+        banned_words = list(db.keys())
+        for word in banned_words:
+            if word.decode('utf-8') in message.get('text', ''):
+                say(text=f"Warning: The word '{word.decode('utf-8')}' is banned in this channel.",
+                    thread_ts=message['ts'])
+                logger.info(
+                    f"The word '{word.decode('utf-8')}' was used and is banned in channel {message['channel']} by user {message['user']}.")
+                break
 
-
-@app.message("coding is the best!")
-def coding_best(message, say):
-    say("I agree! Coding is awesome! :computer: :ultrafastparrot:")
 
 # Start your app
 if __name__ == "__main__":
