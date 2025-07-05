@@ -21,28 +21,19 @@ jobs:
             
             # 1. Navigate to the project directory.
             cd /home/spacexplorer11/word_ban
-            echo "--- Current directory is: $(pwd) ---"
-
+            
             # 2. Pull the latest code.
             git pull
             
-            # 3. Create virtual environment if it doesn't exist, with debugging.
-            echo "--- Checking for .venv directory ---"
+            # 3. Create virtual environment if it doesn't exist.
             if [ ! -d ".venv" ]; then
-              echo "--- .venv not found. Creating it now... ---"
               python3 -m venv .venv
-              echo "--- Listing contents of .venv/bin to verify pip creation: ---"
-              ls -la .venv/bin
-            else
-              echo "--- .venv directory already exists. Listing contents: ---"
-              ls -la .venv/bin
             fi
             
-            # 4. Install dependencies using ABSOLUTE paths for reliability.
-            echo "--- Attempting to install requirements... ---"
-            /home/spacexplorer11/word_ban/.venv/bin/pip install -r /home/spacexplorer11/word_ban/requirements.txt
-            echo "--- Requirements installed successfully. ---"
-
+            # 4. Install dependencies using the venv's python to run the pip module.
+            # This is the most robust method and avoids shebang issues.
+            /home/spacexplorer11/word_ban/.venv/bin/python -m pip install -r /home/spacexplorer11/word_ban/requirements.txt
+            
             # 5. Stop and start the bot process.
             screen -S slack-bot -X quit || true
             screen -dmS slack-bot /home/spacexplorer11/word_ban/.venv/bin/python /home/spacexplorer11/word_ban/app.py
