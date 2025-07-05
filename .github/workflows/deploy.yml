@@ -16,7 +16,6 @@ jobs:
 
       - name: Deploy to Server
         run: |
-          # Connect to the server and run deployment commands.
           ssh -o StrictHostKeyChecking=no ${{ secrets.NEST_USERNAME }}@${{ secrets.NEST_HOST }} '
             set -e
             
@@ -26,9 +25,14 @@ jobs:
             # 2. Pull the latest code.
             git pull
             
-            # 3. Install/update dependencies.
+            # 3. Create virtual environment if it doesn't exist.
+            if [ ! -d ".venv" ]; then
+              python3 -m venv .venv
+            fi
+            
+            # 4. Install/update dependencies.
             ./.venv/bin/pip install -r requirements.txt
             
-            # 4. Restart the systemd service.
-            sudo systemctl restart slack-bot.service
+            # 5. Restart the systemd service.
+            systemctl restart slack-bot.service
           '
