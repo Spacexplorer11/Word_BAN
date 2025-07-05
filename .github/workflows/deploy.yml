@@ -19,8 +19,8 @@ jobs:
           ssh -o StrictHostKeyChecking=no ${{ secrets.NEST_USERNAME }}@${{ secrets.NEST_HOST }} '
             set -e
             
-            # 1. Navigate to the project directory.
-            cd word_ban
+            # 1. Navigate to the project directory using its absolute path.
+            cd /home/spacexplorer11/word_ban
             
             # 2. Pull the latest code.
             git pull
@@ -30,13 +30,12 @@ jobs:
               python3 -m venv .venv
             fi
             
-            # 4. Install/update dependencies.
-            ./.venv/bin/pip install -r requirements.txt
+            # 4. Install dependencies using ABSOLUTE paths for reliability.
+            /home/spacexplorer11/word_ban/.venv/bin/pip install -r /home/spacexplorer11/word_ban/requirements.txt
             
-            # 5. Stop the old bot process if it's running in a screen session.
-            # The `|| true` prevents an error if the session doesn't exist.
+            # 5. Stop the old bot process.
             screen -S slack-bot -X quit || true
             
-            # 6. Start the new bot process in a new, detached screen session.
-            screen -dmS slack-bot ./.venv/bin/python app.py
+            # 6. Start the new bot process using ABSOLUTE paths.
+            screen -dmS slack-bot /home/spacexplorer11/word_ban/.venv/bin/python /home/spacexplorer11/word_ban/app.py
           '
