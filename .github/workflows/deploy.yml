@@ -33,6 +33,10 @@ jobs:
             # 4. Install/update dependencies.
             ./.venv/bin/pip install -r requirements.txt
             
-            # 5. Restart the systemd service.
-            systemctl restart slack-bot.service
+            # 5. Stop the old bot process if it's running in a screen session.
+            # The `|| true` prevents an error if the session doesn't exist.
+            screen -S slack-bot -X quit || true
+            
+            # 6. Start the new bot process in a new, detached screen session.
+            screen -dmS slack-bot ./.venv/bin/python app.py
           '
