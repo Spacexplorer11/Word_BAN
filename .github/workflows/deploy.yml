@@ -1,0 +1,25 @@
+name: Deploy to Server
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install SSH Key
+        uses:  webfactory/ssh-agent@v0.9.0
+        with:
+           ssh-private-key: ${{ secrets.NEST_PRIVATE_KEY }}
+
+      - name: Deploy to Server
+        run: |
+          ssh -o StrictHostKeyChecking=no ${{ secrets.NEST_USERNAME }}@${{ secrets.NEST_HOST }} << 'EOF'
+            cd /home/akaalroopsingh/Word_BAN && \
+            git pull && \
+            source .venv/bin/activate && \
+            pip install -r requirements.txt && \
+            sudo systemctl restart slack-bot.service
+          EOF

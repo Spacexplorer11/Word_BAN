@@ -64,6 +64,40 @@ def handle_message_events(logger, message, say):
                 break
 
 
+@app.command("/unban-word")
+def unban_word(ack, command, respond, client, body):
+    """
+    Unbans a word, but only if the user is a channel manager.
+    Permissions are cached for 5 minutes.
+    """
+    ack()
+    user_id = body["user_id"]
+    channel_id = body["channel_id"]
+
+    is_manager, error_occurred = is_user_channel_manager(client, user_id, channel_id)
+
+    if error_occurred:
+        respond("Sorry, the service is currently busy due to high traffic. Please try again in a moment.")
+        return
+
+    if not is_manager:
+        respond(
+            "Sorry, you are not authorized to use this command. If your permissions recently changed, please try again in 5 minutes")
+        return
+
+    with dbm.open("banned_words.db", "c") as db:
+        word = command["text"].strip()
+        if not word:
+            respond("Please provide a word to unban.")
+            return
+        if word not in db:
+            respond(f"The word '{word}' is not banned.")
+            return
+        if word in db:
+            db.pop(word)
+            respond(f"The word '{word}' was unbanned.")
+
+
 # Start your app
 if __name__ == "__main__":
     SocketModeHandler(app, os.environ["SLACK_APP_TOKEN"]).start()
