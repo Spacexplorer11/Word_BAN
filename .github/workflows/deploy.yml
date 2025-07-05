@@ -16,10 +16,18 @@ jobs:
 
       - name: Deploy to Server
         run: |
-          ssh -o StrictHostKeyChecking=no ${{ secrets.NEST_USERNAME }}@${{ secrets.NEST_HOST }} << 'EOF'
-            cd word_ban && \
-            git pull && \
-            source .venv/bin/activate && \
-            pip install -r requirements.txt && \
+          ssh -o StrictHostKeyChecking=no ${{ secrets.NEST_USER }}@${{ secrets.NEST_HOST }} '
+            set -e
+            # Navigate to the project directory using an absolute path for reliability
+            cd word_ban
+            
+            # Pull the latest code
+            git pull
+            
+            # Install dependencies using a relative path from the project root
+            ./.venv/bin/pip install -r requirements.txt
+            
+            # Restart the service
             sudo systemctl restart slack-bot.service
-          EOF
+          '
+
