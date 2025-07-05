@@ -17,7 +17,7 @@ jobs:
       - name: Deploy to Server
         run: |
           ssh -o StrictHostKeyChecking=no ${{ secrets.NEST_USERNAME }}@${{ secrets.NEST_HOST }} << 'EOF'
-            cd /word_ban && \
+            cd word_ban && \
             git pull && \
             source .venv/bin/activate && \
             pip install -r requirements.txt && \
