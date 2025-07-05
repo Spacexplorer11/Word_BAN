@@ -19,23 +19,31 @@ jobs:
           ssh -o StrictHostKeyChecking=no ${{ secrets.NEST_USERNAME }}@${{ secrets.NEST_HOST }} '
             set -e
             
-            # 1. Navigate to the project directory using its absolute path.
+            # 1. Navigate to the project directory.
             cd /home/spacexplorer11/word_ban
-            
+            echo "--- Current directory is: $(pwd) ---"
+
             # 2. Pull the latest code.
             git pull
             
-            # 3. Create virtual environment if it doesn't exist.
+            # 3. Create virtual environment if it doesn't exist, with debugging.
+            echo "--- Checking for .venv directory ---"
             if [ ! -d ".venv" ]; then
+              echo "--- .venv not found. Creating it now... ---"
               python3 -m venv .venv
+              echo "--- Listing contents of .venv/bin to verify pip creation: ---"
+              ls -la .venv/bin
+            else
+              echo "--- .venv directory already exists. Listing contents: ---"
+              ls -la .venv/bin
             fi
             
             # 4. Install dependencies using ABSOLUTE paths for reliability.
+            echo "--- Attempting to install requirements... ---"
             /home/spacexplorer11/word_ban/.venv/bin/pip install -r /home/spacexplorer11/word_ban/requirements.txt
-            
-            # 5. Stop the old bot process.
+            echo "--- Requirements installed successfully. ---"
+
+            # 5. Stop and start the bot process.
             screen -S slack-bot -X quit || true
-            
-            # 6. Start the new bot process using ABSOLUTE paths.
             screen -dmS slack-bot /home/spacexplorer11/word_ban/.venv/bin/python /home/spacexplorer11/word_ban/app.py
           '
