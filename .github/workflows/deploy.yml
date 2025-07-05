@@ -10,24 +10,25 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Install SSH Key
-        uses:  webfactory/ssh-agent@v0.9.0
+        uses: webfactory/ssh-agent@v0.9.0
         with:
-           ssh-private-key: ${{ secrets.NEST_PRIVATE_KEY }}
+          ssh-private-key: ${{ secrets.NEST_PRIVATE_KEY }}
 
       - name: Deploy to Server
         run: |
-          ssh -o StrictHostKeyChecking=no ${{ secrets.NEST_USER }}@${{ secrets.NEST_HOST }} '
+          # Connect to the server and run deployment commands.
+          ssh -o StrictHostKeyChecking=no ${{ secrets.NEST_USERNAME }}@${{ secrets.NEST_HOST }} '
             set -e
-            # Navigate to the project directory using an absolute path for reliability
+            
+            # 1. Navigate to the project directory.
             cd word_ban
             
-            # Pull the latest code
+            # 2. Pull the latest code.
             git pull
             
-            # Install dependencies using a relative path from the project root
+            # 3. Install/update dependencies.
             ./.venv/bin/pip install -r requirements.txt
             
-            # Restart the service
+            # 4. Restart the systemd service.
             sudo systemctl restart slack-bot.service
           '
-
