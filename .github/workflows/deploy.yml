@@ -26,7 +26,8 @@ jobs:
             git pull
             
             # 3. Create virtual environment if it doesn't exist.
-            if [ ! -d ".venv" ]; then
+            if [ ! -x ".venv/bin/python" ]; then
+              rm -rf .venv
               python3 -m venv .venv
             fi
             
