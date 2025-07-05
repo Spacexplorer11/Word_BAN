@@ -20,22 +20,21 @@ jobs:
             set -e
             
             # 1. Navigate to the project directory.
-            cd /home/spacexplorer11/word_ban
+            cd word_ban
             
             # 2. Pull the latest code.
             git pull
             
             # 3. Create virtual environment if it doesn't exist.
-            if [ ! -x ".venv/bin/python" ]; then
-              rm -rf .venv
+            if [ ! -d ".venv" ]; then
               python3 -m venv .venv
             fi
             
             # 4. Install dependencies using the venv's python to run the pip module.
             # This is the most robust method and avoids shebang issues.
-            /home/spacexplorer11/word_ban/.venv/bin/python -m pip install -r /home/spacexplorer11/word_ban/requirements.txt
+            ./.venv/bin/python -m pip install -r requirements.txt
             
             # 5. Stop and start the bot process.
             screen -S slack-bot -X quit || true
-            screen -dmS slack-bot /home/spacexplorer11/word_ban/.venv/bin/python /home/spacexplorer11/word_ban/app.py
+            screen -dmS slack-bot ./.venv/bin/python app.py
           '
