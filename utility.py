@@ -47,7 +47,9 @@ def send_rate_limit_notification(user_id, channel_id, error):
         ]
     }
     try:
-        requests.post(DISCORD_WEBHOOK_URL, json=message)
+        logger.info(f"Sending rate limit notification for user {user_id} in channel {channel_id}")
+        response = requests.post(DISCORD_WEBHOOK_URL, json=message)
+        logger.info(f"Discord webhook responded with status {response.status_code}")
     except requests.RequestException as e:
         logger.error(f"Failed to send Discord webhook notification: {e}")
 
