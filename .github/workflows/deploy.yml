@@ -34,9 +34,12 @@ jobs:
             # 4. Install dependencies.
             ./.venv/bin/python -m pip install -r requirements.txt
             
-            # 5. Stop any old bot processes using pkill for reliability.
-            # The -f flag matches the full command string. `|| true` prevents an error if no process is found.
-            pkill -f \"app.py\" || true
+            # 5. Stop any old bot processes using pkill.
+            # We temporarily disable exit-on-error (`set +e`) because pkill
+            # returns an error if no process is found, which is not a real failure.
+            set +e
+            pkill -f \"app.py\"
+            set -e
             
             # 6. Start the new bot process in a detached screen session.
             screen -dmS slack-bot ./.venv/bin/python app.py
