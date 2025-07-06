@@ -16,9 +16,6 @@ jobs:
 
       - name: Deploy to Server
         run: |
-          # This command connects to the server and executes a new bash shell.
-          # The -c flag tells bash to read commands from the following string.
-          # This ensures all commands run in the same, reliable context.
           ssh -o StrictHostKeyChecking=no ${{ secrets.NEST_USERNAME }}@${{ secrets.NEST_HOST }} \
           'bash -c "
             set -e
@@ -34,10 +31,13 @@ jobs:
               python3 -m venv .venv
             fi
             
-            # 4. Install dependencies using the venv’s python to run pip.
+            # 4. Install dependencies.
             ./.venv/bin/python -m pip install -r requirements.txt
             
-            # 5. Stop and start the bot process.
-            screen -S slack-bot -X quit || true
+            # 5. Stop any old bot processes using pkill for reliability.
+            # The -f flag matches the full command string. `|| true` prevents an error if no process is found.
+            pkill -f \"app.py\" || true
+            
+            # 6. Start the new bot process in a detached screen session.
             screen -dmS slack-bot ./.venv/bin/python app.py
           "'
