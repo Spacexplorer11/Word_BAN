@@ -31,7 +31,7 @@ jobs:
             fi
             
             #DEBUG
-            ls
+            echo ls
             
             # 4. Install dependencies using the venv's python to run the pip module.
             # This is the most robust method and avoids shebang issues.
