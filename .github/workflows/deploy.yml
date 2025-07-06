@@ -16,31 +16,41 @@ jobs:
 
       - name: Deploy to Server
         run: |
-          ssh -o StrictHostKeyChecking=no ${{ secrets.NEST_USERNAME }}@${{ secrets.NEST_HOST }} \
-          'bash -c "
+          ssh -o StrictHostKeyChecking=no ${{ secrets.NEST_USERNAME }}@${{ secrets.NEST_HOST }} 'bash -se' <<'EOF'
             set -e
-            
+
             # 1. Navigate to the project directory.
-            cd /home/spacexplorer11/word_ban
-            
+            cd ~/word_ban
+
             # 2. Pull the latest code.
             git pull
-            
+
             # 3. Create virtual environment if it doesn’t exist.
-            if [ ! -d \".venv\" ]; then
-              python3 -m venv .venv
-            fi
-            
+            [ -d ".venv" ] || python3 -m venv .venv
+
             # 4. Install dependencies.
-            ./.venv/bin/python -m pip install -r requirements.txt
-            
-            # 5. Stop any old bot processes using pkill.
-            # We temporarily disable exit-on-error (`set +e`) because pkill
-            # returns an error if no process is found, which is not a real failure.
-            set +e
-            pkill -f \"app.py\"
-            set -e
-            
-            # 6. Start the new bot process in a detached screen session.
-            screen -dmS slack-bot ./.venv/bin/python app.py
-          "'
+            .venv/bin/python -m pip install -r requirements.txt
+
+            # 5. Set up systemd user service
+            mkdir -p ~/.config/systemd/user
+
+            cat > ~/.config/systemd/user/slack-bot.service <<'EOL'
+            [Unit]
+            Description=Word BAN Slack Bot
+
+            [Service]
+            WorkingDirectory=%h/word_ban
+            EnvironmentFile=%h/word_ban/.env
+            ExecStart=%h/word_ban/.venv/bin/python app.py
+            Restart=on-failure
+
+            [Install]
+            WantedBy=default.target
+            EOL
+
+            # 6. Enable lingering and start service
+            loginctl enable-linger "$(whoami)" || true
+            systemctl --user daemon-reexec || true
+            systemctl --user daemon-reload
+            systemctl --user enable --now slack-bot.service
+          EOF
