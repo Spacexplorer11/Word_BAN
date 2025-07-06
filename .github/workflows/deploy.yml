@@ -16,29 +16,28 @@ jobs:
 
       - name: Deploy to Server
         run: |
-          ssh -o StrictHostKeyChecking=no ${{ secrets.NEST_USERNAME }}@${{ secrets.NEST_HOST }} '
+          # This command connects to the server and executes a new bash shell.
+          # The -c flag tells bash to read commands from the following string.
+          # This ensures all commands run in the same, reliable context.
+          ssh -o StrictHostKeyChecking=no ${{ secrets.NEST_USERNAME }}@${{ secrets.NEST_HOST }} \
+          'bash -c "
             set -e
             
             # 1. Navigate to the project directory.
-            cd word_ban
+            cd /home/spacexplorer11/word_ban
             
             # 2. Pull the latest code.
             git pull
             
-            # 3. Create virtual environment if it doesn't exist.
-            if [ ! -d ".venv" ]; then
+            # 3. Create virtual environment if it doesn’t exist.
+            if [ ! -d \".venv\" ]; then
               python3 -m venv .venv
             fi
             
-            #DEBUG
-            pwd 
-            ls
-            
-            # 4. Install dependencies using the venv's python to run the pip module.
-            # This is the most robust method and avoids shebang issues.
+            # 4. Install dependencies using the venv’s python to run pip.
             ./.venv/bin/python -m pip install -r requirements.txt
             
             # 5. Stop and start the bot process.
             screen -S slack-bot -X quit || true
             screen -dmS slack-bot ./.venv/bin/python app.py
-          '
+          "'
