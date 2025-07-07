@@ -41,7 +41,7 @@ def ban_word(ack, command, respond, client, body):
         return
 
     with dbm.open("banned_words.db", "c") as db:
-        word_key = f"{body['channel_id']}:{command['text'].strip()}"
+        word_key = f"{body['channel_id']}:{command['text'].strip().lower()}"
         if word_key == f"{body['channel_id']}:":
             logger.warning(f"No word provided by {body['user_id']} in channel {body['channel_id']}")
             respond("Please provide a word to ban.")
@@ -70,7 +70,7 @@ def handle_message_events(logger, message, say):
                 if f"{channel_id}:".encode('utf-8') in word:
                     # Remove the channel ID from the word
                     word = word.split(f"{channel_id}:".encode('utf-8'))[1]
-                    if word.decode('utf-8') in message.get('text', ''):
+                    if word.decode('utf-8').lower() in message.get('text', '').lower():
                         say(text=f"Warning: The word '{word.decode('utf-8')}' is banned in this channel.",
                             thread_ts=message['ts'])
                         logger.info(
@@ -102,7 +102,7 @@ def unban_word(ack, command, respond, client, body):
         return
 
     with dbm.open("banned_words.db", "c") as db:
-        word_key = f"{body['channel_id']}:{command['text'].strip()}"
+        word_key = f"{body['channel_id']}:{command['text'].strip().lower()}"
         if word_key == f"{body['channel_id']}:":
             logger.warning(f"No word provided by {body['user_id']} in channel {body['channel_id']}")
             respond("Please provide a word to unban.")
