@@ -37,7 +37,7 @@ def ban_word(ack, command, respond, client, body):
     logger.info(f"User {body['user_id']} manager status in channel {body['channel_id']}: {is_manager}")
     if not is_manager:
         logger.warning(f"Unauthorized /ban-word attempt by {body['user_id']} in {body['channel_id']}")
-        respond("Sorry, you are not authorized to use this command. If your permissions recently changed, please try again in 5 minutes")
+        respond("Sorry, you are not authorised to use this command. If your permissions recently changed, please try again in 5 minutes")
         return
 
     with dbm.open("banned_words.db", "c") as db:
