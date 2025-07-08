@@ -64,7 +64,7 @@ def handle_message_events(logger, message, say):
     logger.info(f"Processing message from user {message.get('user')} in {channel_id}: '{message.get('text','')}'")
     try:
         with dbm.open("banned_words.db", "r") as db:
-            banned_words = list(db.keys())
+            banned_words = tuple(db.keys())
             for word in banned_words:
                 # Check if the word is banned in the current channel
                 if f"{channel_id}:".encode('utf-8') in word:
@@ -111,9 +111,69 @@ def unban_word(ack, command, respond, client, body):
             logger.info(f"Attempt to unban non-existent word '{command['text'].strip()}' in {body['channel_id']}")
             respond(f"The word '{command['text'].strip()}' is not banned.")
             return
-        db.pop(word_key)
-        logger.info(f"Unbanned word '{command['text'].strip()}' for channel {body['channel_id']}")
-        respond(f"The word '{command['text'].strip()}' was unbanned.")
+        else:
+            db.pop(word_key)
+            logger.info(f"Unbanned word '{command['text'].strip()}' for channel {body['channel_id']}")
+            respond(f"The word '{command['text'].strip()}' was unbanned.")
+
+
+@app.event("message")
+def handle_message_events(body, logger):
+    logger.info(body)
+
+
+@app.command("/banned-words")
+def list_banned_words(ack, respond, body):
+    ack()
+    channel_id = body.get("channel_id")
+    channel_banned_words = []
+    try:
+        with dbm.open("banned_words.db", "r") as db:
+            banned_words = tuple(db.keys())
+            for word in banned_words:
+                prefix = f"{channel_id}:".encode('utf-8')
+                if word.startswith(prefix):
+                    banned_word = word[len(prefix):].decode('utf-8')
+                    channel_banned_words.append(banned_word)
+        logger.info(f"Listed banned words for channel {channel_id}: {channel_banned_words}")
+        if channel_banned_words:
+            blocks = [
+                {
+                    "type": "rich_text",
+                    "elements": [
+                        {
+                            "type": "rich_text_section",
+                            "elements": [
+                                {
+                                    "type": "text",
+                                    "text": "Banned words in this channel:"
+                                }
+                            ]
+                        },
+                        {
+                            "type": "rich_text_list",
+                            "style": "bullet",
+                            "elements": [
+                                {
+                                    "type": "rich_text_section",
+                                    "elements": [
+                                        {
+                                            "type": "text",
+                                            "text": word
+                                        }
+                                    ]
+                                } for word in channel_banned_words
+                            ]
+                        }
+                    ]
+                }
+            ]
+            respond(blocks=blocks, text="Banned words in this channel")
+        else:
+            respond("There are no banned words in this channel.")
+    except FileNotFoundError as e:
+        logger.warning(f"Banned words DB missing when listing banned words: {e}")
+        respond("No banned words found.")
 
 
 # Start your app
