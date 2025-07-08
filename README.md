@@ -33,9 +33,6 @@ These are the commands you can use with Word BAN:
 - `/is-banned [word]` – Checks if a word is banned in the channel it's run.  
 - `/score` – View your score.*  
 - `/leaderboard` – See who’s dodging the most banned words (or not).*  
-- `/reflect [your message]` – Submit a reflection after using a banned word.*  
-
-🔐 Only the **channel creator** or a **workspace admin/owner** can use `/ban-word` and `/unban-word` (due to Slack API limitations — "channel manager" status isn't visible to bots).  
-✨ Soon: Channel creators will be able to authorise specific users to use these commands per-channel.*
+- `/reflect [your message]` – Submit a reflection after using a banned word.*
 
 ###### 🛠️ *Features marked with a star are still being brewed in the cauldron (aka work in progress).
