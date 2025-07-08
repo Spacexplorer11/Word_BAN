@@ -1,12 +1,10 @@
 import dbm
-import os
 import logging
+import os
 
 from dotenv import load_dotenv
 from slack_bolt import App
 from slack_bolt.adapter.socket_mode import SocketModeHandler
-
-from utility import is_user_channel_manager
 
 load_dotenv()
 
@@ -26,19 +24,8 @@ def ban_word(ack, command, respond, client, body):
     Permissions are cached for 5 minutes.
     """
     ack()
-    logger.info(f"Received /ban-word from user {body['user_id']} in channel {body['channel_id']} with text '{command['text']}'")
-    is_manager, error_occurred = is_user_channel_manager(client, body["user_id"], body["channel_id"])
-
-    if error_occurred:
-        logger.error(f"Permissions check failed for user {body['user_id']} in channel {body['channel_id']}")
-        respond("Sorry, the service is currently busy due to high traffic. Please try again in a moment.")
-        return
-
-    logger.info(f"User {body['user_id']} manager status in channel {body['channel_id']}: {is_manager}")
-    if not is_manager:
-        logger.warning(f"Unauthorized /ban-word attempt by {body['user_id']} in {body['channel_id']}")
-        respond("Sorry, you are not authorised to use this command. If your permissions recently changed, please try again in 5 minutes")
-        return
+    logger.info(
+        f"Received /ban-word from user {body['user_id']} in channel {body['channel_id']} with text '{command['text']}'")
 
     with dbm.open("banned_words.db", "c") as db:
         word_key = f"{body['channel_id']}:{command['text'].strip().lower()}"
@@ -61,7 +48,7 @@ def handle_message_events(logger, message, say):
     Handles incoming messages and checks for banned words.
     """
     channel_id = message.get('channel')
-    logger.info(f"Processing message from user {message.get('user')} in {channel_id}: '{message.get('text','')}'")
+    logger.info(f"Processing message from user {message.get('user')} in {channel_id}: '{message.get('text', '')}'")
     try:
         with dbm.open("banned_words.db", "r") as db:
             banned_words = tuple(db.keys())
@@ -87,19 +74,8 @@ def unban_word(ack, command, respond, client, body):
     Permissions are cached for 5 minutes.
     """
     ack()
-    logger.info(f"Received /unban-word from user {body['user_id']} in channel {body['channel_id']} with text '{command['text']}'")
-    is_manager, error_occurred = is_user_channel_manager(client, body["user_id"], body["channel_id"])
-
-    if error_occurred:
-        logger.error(f"Permissions check failed for user {body['user_id']} in channel {body['channel_id']}")
-        respond("Sorry, the service is currently busy due to high traffic. Please try again in a moment.")
-        return
-
-    logger.info(f"User {body['user_id']} manager status in channel {body['channel_id']}: {is_manager}")
-    if not is_manager:
-        logger.warning(f"Unauthorized /unban-word attempt by {body['user_id']} in {body['channel_id']}")
-        respond("Sorry, you are not authorised to use this command. If your permissions recently changed, please try again in 5 minutes")
-        return
+    logger.info(
+        f"Received /unban-word from user {body['user_id']} in channel {body['channel_id']} with text '{command['text']}'")
 
     with dbm.open("banned_words.db", "c") as db:
         word_key = f"{body['channel_id']}:{command['text'].strip().lower()}"
