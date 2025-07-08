@@ -176,6 +176,25 @@ def list_banned_words(ack, respond, body):
         respond("No banned words found.")
 
 
+@app.command("/is-banned")
+def is_banned(ack, command, respond, body):
+    ack()
+    channel_id = body.get("channel_id")
+    word = f"{channel_id}:{command.get("text", "").strip().lower()}"
+    logger.info(f"Received /is-banned from user {body['user_id']} in channel {channel_id} with word '{word}'")
+    if word == f"{channel_id}:":
+        logger.warning(f"No word provided by {body['user_id']} in channel {channel_id}")
+        respond("Please provide a word to check.")
+        return
+    with dbm.open("banned_words.db", "r") as db:
+        if word in db:
+            logger.info(f"The word '{command['text'].strip()}' is banned in channel {channel_id}")
+            respond(f"The word '{command['text'].strip()}' is banned in this channel.")
+        else:
+            logger.info(f"The word '{command['text'].strip()}' is not banned in channel {channel_id}")
+            respond(f"The word '{command['text'].strip()}' is not banned in this channel.")
+
+
 # Start your app
 if __name__ == "__main__":
     logger.info("Starting Slack bot listener")
