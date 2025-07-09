@@ -1,6 +1,7 @@
 import dbm
 import logging
 import os
+import string
 
 from dotenv import load_dotenv
 from slack_bolt import App
@@ -18,7 +19,7 @@ logger = logging.getLogger(__name__)
 
 
 @app.command("/ban-word")
-def ban_word(ack, command, respond, client, body):
+def ban_word(ack, command, respond, body):
     """
     Bans a word, but only if the user is a channel manager.
     Permissions are cached for 5 minutes.
@@ -48,27 +49,37 @@ def handle_message_events(logger, message, say):
     Handles incoming messages and checks for banned words.
     """
     channel_id = message.get('channel')
+    user_id = message['user']
     logger.info(f"Processing message from user {message.get('user')} in {channel_id}: '{message.get('text', '')}'")
     try:
-        with dbm.open("banned_words.db", "r") as db:
-            banned_words = tuple(db.keys())
-            for word in banned_words:
-                # Check if the word is banned in the current channel
-                if f"{channel_id}:".encode('utf-8') in word:
-                    # Remove the channel ID from the word
-                    word = word.split(f"{channel_id}:".encode('utf-8'))[1]
-                    if word.decode('utf-8').lower() in message.get('text', '').lower():
-                        say(text=f"Warning: The word '{word.decode('utf-8')}' is banned in this channel.",
-                            thread_ts=message['ts'])
-                        logger.info(
-                            f"The word '{word.decode('utf-8')}' was used and is banned in channel {message['channel']} by user {message['user']}.")
-                        break
+        with dbm.open("scores.db", "c") as scores_db:
+            with dbm.open("banned_words.db", "r") as db:
+                banned_words = tuple(db.keys())
+                for word in banned_words:
+                    # Check if the word is banned in the current channel
+                    if f"{channel_id}:".encode('utf-8') in word:
+                        # Remove the channel ID from the word
+                        word = word.split(f"{channel_id}:".encode('utf-8'))[1]
+                        text_cleaned = message.get('text', '').translate(
+                            str.maketrans('', '', string.punctuation)).lower()
+                        if word.decode('utf-8') in text_cleaned:
+                            say(text=f":siren-real: :siren-real: The word '{word.decode('utf-8')}' is banned in this channel! You have been penalised. \n Your score has been reduced by 1. It is now {int(scores_db.get(user_id, 0)) - 1}.",
+                                thread_ts=message['ts'])
+                            logger.info(
+                                f"The word '{word.decode('utf-8')}' was used and is banned in channel {message['channel']} by user {message['user']}.")
+                            if user_id in scores_db:
+                                scores_db[user_id] = str(int(scores_db[user_id]) - 1)
+                            else:
+                                scores_db[user_id] = "-1"
+                            break
+            if user_id not in scores_db:
+                scores_db[user_id] = "0"
     except FileNotFoundError as e:
         logger.warning(f"Banned words DB missing when handling message: {e}")
 
 
 @app.command("/unban-word")
-def unban_word(ack, command, respond, client, body):
+def unban_word(ack, command, respond, body):
     """
     Unbans a word, but only if the user is a channel manager.
     Permissions are cached for 5 minutes.
@@ -169,6 +180,33 @@ def is_banned(ack, command, respond, body):
         else:
             logger.info(f"The word '{command['text'].strip()}' is not banned in channel {channel_id}")
             respond(f"The word '{command['text'].strip()}' is not banned in this channel.")
+
+
+@app.command("/score")
+def score(ack, respond, body):
+    """
+    Displays the user's score based on banned words.
+    """
+    ack()
+    user_id = body['user_id']
+    logger.info(f"Received /score from user {user_id} in channel {body['channel_id']}")
+
+    with dbm.open("scores.db", "c") as db:
+        score = int(db.get(user_id, 0))
+        logger.info(f"User {user_id} has a score of {score}")
+        respond(f"Your current score is: {score}")
+
+
+@app.command("/leaderboard")
+def leaderboard(ack, respond, body):
+    ack()
+    respond("This command is not implemented yet. Please check back later.")
+
+
+@app.command("/reflect")
+def reflection(ack, respond, body):
+    ack()
+    respond("This command is not implemented yet. Please check back later.")
 
 
 # Start your app
