@@ -4,7 +4,6 @@
 __pycache__
 *.pyc
 *.db
+*.db-shm
+*.db-wal
 .env
-banned_words.db
-banned_words.db-shm
-banned_words.db-wal

@@ -16,7 +16,7 @@ But that’s not all. Here’s where things get spicy:
 - 🔻 Every banned word spoken drops a user’s score.  
 - 🏆 There’s a leaderboard to keep things competitive.*  
 - ⛓️ Set punishments when someone hits a low enough score — reactions, cheeky replies, you name it.*  
-- 🔍 Users can check their score or the leaderboard at any time.*  
+- 🔍 Users can check their score or the leaderboard at any time.  
 - 👎 Users can *downvote* others' banned-word messages to bump their own score up.*  
 - 📝 Users can write a “banned word reflection” explaining themselves — post it to the channel, and if the community votes in favour, they get a clean slate.*  
   Banned words are case-insensitive by default — so *"Dog"*, *"dog"*, and *"DoG"* are all treated the same.  
@@ -32,7 +32,7 @@ These are the commands you can use with Word BAN:
 - `/banned-words` – Lists banned words in the channel it's run.  
 - `/is-banned [word]` – Checks if a word is banned in the channel it's run.  
 - `/score` – View your score.  
-- `/leaderboard` – See who’s dodging the most banned words (or not).*  
+- `/naughty-leaderboard` – See who’s dodging the most banned words (or not).  
 - `/reflect [your message]` – Submit a reflection after using a banned word.*
 
 ###### 🛠️ *Features marked with a star are still being brewed in the cauldron (aka work in progress).

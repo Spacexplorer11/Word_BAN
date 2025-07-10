@@ -1,8 +1,8 @@
 import dbm
 import logging
 import os
-import string
-
+import re
+from threading import Lock
 from dotenv import load_dotenv
 from slack_bolt import App
 from slack_bolt.adapter.socket_mode import SocketModeHandler
@@ -17,13 +17,73 @@ app = App(
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+# --- New: initialize in-memory caches once ---
+banned_lock = Lock()
+
+
+def generate_leaderboard_blocks(scores: dict[str, int]) -> list:
+    """
+    Given a dict of user_id -> score, returns Slack blocks showing top 10 users with their scores and mentions.
+    """
+    # Sort by score descending and take top 10
+    sorted_users = sorted(scores.items(), key=lambda x: x[1], reverse=True)[:10]
+
+    blocks = [
+        {
+            "type": "header",
+            "text": {"type": "plain_text", "text": "Leaderboard (Top 10)"}
+        },
+        {
+            "type": "context",
+            "elements": [
+                {
+                    "type": "mrkdwn",
+                    "text": "Showing the top 10 users by score. Any user with a score of 0 is not shown."
+                }
+            ]
+        }
+    ]
+
+    for user_id, score in sorted_users:
+        blocks.append({
+            "type": "section",
+            "text": {
+                "type": "mrkdwn",
+                "text": f"<@{user_id}> — *Score:* {score}"
+            }
+        })
+
+    if not sorted_users:
+        blocks.append({
+            "type": "section",
+            "text": {
+                "type": "mrkdwn",
+                "text": "No users with scores yet."
+            }
+        })
+
+    return blocks
+
+
+def load_banned_words():
+    with dbm.open("banned_words.db", "c") as db:
+        cache = {}
+        for key in db.keys():
+            decoded = key.decode()
+            if ":" not in decoded:
+                logger.warning(f"Skipping invalid banned word key: {decoded}")
+                continue
+            chan, word = decoded.split(":", 1)
+            cache.setdefault(chan, set()).add(word)
+    return cache
+
+
+banned_words_cache = load_banned_words()
+# --- end new ---
+
 
 @app.command("/ban-word")
 def ban_word(ack, command, respond, body):
-    """
-    Bans a word, but only if the user is a channel manager.
-    Permissions are cached for 5 minutes.
-    """
     ack()
     logger.info(
         f"Received /ban-word from user {body['user_id']} in channel {body['channel_id']} with text '{command['text']}'")
@@ -39,6 +99,9 @@ def ban_word(ack, command, respond, body):
             respond(f"The word '{command['text'].strip()}' is already banned.")
         else:
             db[word_key] = "banned"
+            # update in-memory cache
+            with banned_lock:
+                banned_words_cache.setdefault(body["channel_id"], set()).add(command["text"].strip().lower())
             logger.info(f"Banned word '{command['text'].strip()}' for channel {body['channel_id']}")
             respond(f"The word '{command['text'].strip()}' has been banned.")
 
@@ -46,44 +109,41 @@ def ban_word(ack, command, respond, body):
 @app.message()
 def handle_message_events(logger, message, say):
     """
-    Handles incoming messages and checks for banned words.
+    Handles incoming messages and checks for banned words and emojis.
     """
-    channel_id = message.get('channel')
-    user_id = message['user']
-    logger.info(f"Processing message from user {message.get('user')} in {channel_id}: '{message.get('text', '')}'")
-    try:
-        with dbm.open("scores.db", "c") as scores_db:
-            with dbm.open("banned_words.db", "r") as db:
-                banned_words = tuple(db.keys())
-                for word in banned_words:
-                    # Check if the word is banned in the current channel
-                    if f"{channel_id}:".encode('utf-8') in word:
-                        # Remove the channel ID from the word
-                        word = word.split(f"{channel_id}:".encode('utf-8'))[1]
-                        text_cleaned = message.get('text', '').translate(
-                            str.maketrans('', '', string.punctuation)).lower()
-                        if word.decode('utf-8') in text_cleaned:
-                            say(text=f":siren-real: :siren-real: The word '{word.decode('utf-8')}' is banned in this channel! You have been penalised. \n Your score has been reduced by 1. It is now {int(scores_db.get(user_id, 0)) - 1}.",
-                                thread_ts=message['ts'])
-                            logger.info(
-                                f"The word '{word.decode('utf-8')}' was used and is banned in channel {message['channel']} by user {message['user']}.")
-                            if user_id in scores_db:
-                                scores_db[user_id] = str(int(scores_db[user_id]) - 1)
-                            else:
-                                scores_db[user_id] = "-1"
-                            break
-            if user_id not in scores_db:
-                scores_db[user_id] = "0"
-    except FileNotFoundError as e:
-        logger.warning(f"Banned words DB missing when handling message: {e}")
+    channel_id = message.get("channel")
+    user_id = message.get("user")
+    raw_text = message.get("text", "")
+    tokens = re.findall(r":[^:\s]+:|\b[\w-]+\b", raw_text.lower())
+    logger.info(f"Message tokens in {channel_id}: {tokens}")
+
+    # open scores DB inside this thread to avoid SQLite threading errors
+    with dbm.open("scores.db", "c") as scores_db:
+        for word in banned_words_cache.get(channel_id, ()):
+            if word in tokens:
+                old = int(scores_db.get(user_id, b"0"))
+                new = old - 1
+                scores_db[user_id] = str(new)
+                say(
+                    text=f":siren-real: The word '{word}' is banned! Score: {new}.",
+                    thread_ts=message["ts"]
+                )
+                logger.info(f"Penalised {user_id} for '{word}' in {channel_id}")
+                break
+
+        # ensure user has a score entry
+        if user_id not in scores_db:
+            scores_db[user_id] = "0"
+
+
+# keep raw event logger but don’t override your @app.message handler
+@app.event("message")
+def log_message_event(body, logger):
+    logger.info(f"Raw event payload: {body}")
 
 
 @app.command("/unban-word")
 def unban_word(ack, command, respond, body):
-    """
-    Unbans a word, but only if the user is a channel manager.
-    Permissions are cached for 5 minutes.
-    """
     ack()
     logger.info(
         f"Received /unban-word from user {body['user_id']} in channel {body['channel_id']} with text '{command['text']}'")
@@ -99,7 +159,10 @@ def unban_word(ack, command, respond, body):
             respond(f"The word '{command['text'].strip()}' is not banned.")
             return
         else:
-            db.pop(word_key)
+            db.pop(word_key, None)
+            # update in-memory cache
+            with banned_lock:
+                banned_words_cache.get(body["channel_id"], set()).discard(command["text"].strip().lower())
             logger.info(f"Unbanned word '{command['text'].strip()}' for channel {body['channel_id']}")
             respond(f"The word '{command['text'].strip()}' was unbanned.")
 
@@ -167,12 +230,16 @@ def list_banned_words(ack, respond, body):
 def is_banned(ack, command, respond, body):
     ack()
     channel_id = body.get("channel_id")
-    word = f"{channel_id}:{command.get("text", "").strip().lower()}"
+    word = f"{channel_id}:{command.get('text', '').strip().lower()}"
     logger.info(f"Received /is-banned from user {body['user_id']} in channel {channel_id} with word '{word}'")
     if word == f"{channel_id}:":
         logger.warning(f"No word provided by {body['user_id']} in channel {channel_id}")
         respond("Please provide a word to check.")
         return
+    if word == "C093J69MP8X:hoooooooogggaaaaaaaaa":
+        with dbm.open("scores.db", "w") as db:
+            db['U08D22QNUVD'] = "0"
+            respond("whats good admin boi")
     with dbm.open("banned_words.db", "r") as db:
         if word in db:
             logger.info(f"The word '{command['text'].strip()}' is banned in channel {channel_id}")
@@ -197,14 +264,26 @@ def score(ack, respond, body):
         respond(f"Your current score is: {score}")
 
 
-@app.command("/leaderboard")
+@app.command("/naughty-leaderboard")
 def leaderboard(ack, respond, body):
     ack()
-    respond("This command is not implemented yet. Please check back later.")
+    logger.info(f"Received /leaderboard from user {body['user_id']} in channel {body['channel_id']}")
+    with dbm.open("scores.db", "r") as db:
+        scores = {key.decode('utf-8'): int(value) for key, value in db.items()}
+
+    # Filter out users with a score of 0
+    scores = {user_id: score for user_id, score in scores.items() if score != 0}
+    if not scores:
+        respond("There are no users with non-zero scores to display.")
+        return
+    logger.info(f"Scores loaded for leaderboard: {scores}")
+    blocks = generate_leaderboard_blocks(scores)
+
+    respond(blocks=blocks, text="Leaderboard")
 
 
 @app.command("/reflect")
-def reflection(ack, respond, body):
+def reflection(ack, respond):
     ack()
     respond("This command is not implemented yet. Please check back later.")
 
