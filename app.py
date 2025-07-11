@@ -114,8 +114,14 @@ def handle_message_events(logger, message, say):
     channel_id = message.get("channel")
     user_id = message.get("user")
     raw_text = message.get("text", "")
-    tokens = re.findall(r":[^:\s]+:|\b[\w-]+\b", raw_text.lower())
+    if re.search(r":[^:\s]+:", raw_text.lower()):
+        tokens = re.findall(r":[^:\s]+:", raw_text.lower())
+    else:
+        # Remove punctuation and treat the whole sentence as one word
+        sanitized = re.sub(r"[^\w\s-]", "", raw_text.lower())
+        tokens = [sanitized.replace(" ", "")]
     logger.info(f"Message tokens in {channel_id}: {tokens}")
+    isEmoji = bool(lambda token: token.startswith(":") and token.endswith(":"))
 
     # open scores DB inside this thread to avoid SQLite threading errors
     with dbm.open("scores.db", "c") as scores_db:
@@ -125,7 +131,7 @@ def handle_message_events(logger, message, say):
                 new = old - 1
                 scores_db[user_id] = str(new)
                 say(
-                    text=f":siren-real: The word '{word}' is banned! Score: {new}.",
+                    text=f":siren-real: The {'emoji' if isEmoji else 'word'} '{word}' is banned! Score: {new}.",
                     thread_ts=message["ts"]
                 )
                 logger.info(f"Penalised {user_id} for '{word}' in {channel_id}")
