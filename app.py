@@ -9,7 +9,7 @@ from slack_bolt.adapter.socket_mode import SocketModeHandler
 
 load_dotenv()
 
-# Initializes your app with your bot token and socket mode handler
+# Initialises your app with your bot token and socket mode handler
 app = App(
     token=os.environ.get("SLACK_BOT_TOKEN"),
 )
@@ -17,7 +17,7 @@ app = App(
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# --- New: initialize in-memory caches once ---
+# --- Initialise in-memory caches once ---
 banned_lock = Lock()
 
 
@@ -79,7 +79,6 @@ def load_banned_words():
 
 
 banned_words_cache = load_banned_words()
-# --- end new ---
 
 
 @app.command("/ban-word")
@@ -114,12 +113,17 @@ def handle_message_events(logger, message, say):
     channel_id = message.get("channel")
     user_id = message.get("user")
     raw_text = message.get("text", "")
+
+    # Check if the message contains Slack-style emoji codes (e\.g\. :smile:).
+    # If emojis are found, extract them as tokens.
+    # Otherwise, sanitise the message by removing punctuation and spaces,
+    # treating the whole sentence as a single token for banned word checking.
     if re.search(r":[^:\s]+:", raw_text.lower()):
         tokens = re.findall(r":[^:\s]+:", raw_text.lower())
     else:
         # Remove punctuation and treat the whole sentence as one word
-        sanitized = re.sub(r"[^\w\s-]", "", raw_text.lower())
-        tokens = [sanitized.replace(" ", "")]
+        sanitised = re.sub(r"[^\w\s-]", "", raw_text.lower())
+        tokens = [sanitised.replace(" ", "")]
     logger.info(f"Message tokens in {channel_id}: {tokens}")
     isEmoji = bool(lambda token: token.startswith(":") and token.endswith(":"))
 
@@ -142,7 +146,6 @@ def handle_message_events(logger, message, say):
             scores_db[user_id] = "0"
 
 
-# keep raw event logger but don’t override your @app.message handler
 @app.event("message")
 def log_message_event(body, logger):
     logger.info(f"Raw event payload: {body}")
