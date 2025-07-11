@@ -236,10 +236,6 @@ def is_banned(ack, command, respond, body):
         logger.warning(f"No word provided by {body['user_id']} in channel {channel_id}")
         respond("Please provide a word to check.")
         return
-    if word == "C093J69MP8X:hoooooooogggaaaaaaaaa":
-        with dbm.open("scores.db", "w") as db:
-            db['U08D22QNUVD'] = "0"
-            respond("whats good admin boi")
     with dbm.open("banned_words.db", "r") as db:
         if word in db:
             logger.info(f"The word '{command['text'].strip()}' is banned in channel {channel_id}")
