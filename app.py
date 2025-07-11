@@ -114,28 +114,19 @@ def handle_message_events(logger, message, say):
     user_id = message.get("user")
     raw_text = message.get("text", "")
 
-    # Check if the message contains Slack-style emoji codes (e\.g\. :smile:).
-    # If emojis are found, extract them as tokens.
-    # Otherwise, sanitise the message by removing punctuation and spaces,
-    # treating the whole sentence as a single token for banned word checking.
-    if re.search(r":[^:\s]+:", raw_text.lower()):
-        tokens = re.findall(r":[^:\s]+:", raw_text.lower())
-    else:
-        # Remove punctuation and treat the whole sentence as one word
-        sanitised = re.sub(r"[^\w\s-]", "", raw_text.lower())
-        tokens = [sanitised.replace(" ", "")]
-    logger.info(f"Message tokens in {channel_id}: {tokens}")
-    isEmoji = bool(lambda token: token.startswith(":") and token.endswith(":"))
+    # Flatten message: lowercase, strip all non-alphanumeric and non-colon characters (removes underscores, dashes, etc.), no whitespace removal
+    flattened = re.sub(r"[^a-zA-Z0-9:]", "", raw_text.lower())
+    logger.info(f"Message after processing in {channel_id}: {flattened}")
 
     # open scores DB inside this thread to avoid SQLite threading errors
     with dbm.open("scores.db", "c") as scores_db:
         for word in banned_words_cache.get(channel_id, ()):
-            if word in tokens:
+            if word in flattened:
                 old = int(scores_db.get(user_id, b"0"))
                 new = old - 1
                 scores_db[user_id] = str(new)
                 say(
-                    text=f":siren-real: The {'emoji' if isEmoji else 'word'} '{word}' is banned! Score: {new}.",
+                    text=f":siren-real: The {'emoji' if word.startswith(':') and word.endswith(':') else 'word'} '{word}' is banned! Score: {new}.",
                     thread_ts=message["ts"]
                 )
                 logger.info(f"Penalised {user_id} for '{word}' in {channel_id}")
