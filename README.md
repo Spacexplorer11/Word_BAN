@@ -10,3 +10,11 @@ Check out the commands in [commands.md](Commands.md)!
 ## What can it do?
 As I mentioned above, it just says this word x is banned when that word is banned. So obviously you can ban/unban words, but also you can see a score!  
 Yeah so I added a scoring system so your score goes down when you say a banned word, and theres a leaderboard too. That's about everything the bot does!
+
+## How to self-host
+### Here is a guide to self-host the bot:
+1. Download the code
+2. Run `pip install -m requirements.txt`
+3. Create a `.env` file and add `SLACK_BOT_TOKEN=` with your slack bot token, and `SLACK_APP_TOKEN=` with the slack app token
+4. Run `python app.py` or `python3 app.py`
+Any issues, please make an issue
