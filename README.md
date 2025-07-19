@@ -1,38 +1,12 @@
-# Welcome to Word BAN
-![Hackatime badge](https://hackatime-badge.hackclub.com/U08D22QNUVD/word_ban)
+# Word Ban ![Hackatime badge](https://hackatime-badge.hackclub.com/U08D22QNUVD/word_ban)
+## What is it?
+Word ban is a slackbot that lets you ban words in specific channels like "dog" in your cat channel.  
+I made it cuz I saw people say that specific words are banned, even though they aren't illegal or swears or whatever, just for funny reasons  
+so I made a bot to automatically say "this word is banned".  
 
-Word BAN is a quirky Slack bot for playful word-banning in specific channels.  
-Ever wanted to ban the word *"dog"* in your *#cat-appreciation* channel? Now you can.  
-⚠️ This is **not** a moderation bot. It’s just a light-hearted bot for word-related fun — not a substitute for a proper profanity filter.
+## What commands are there?
+Check out the commands in [commands.md](Commands.md)!  
 
 ## What can it do?
-
-Whenever someone uses a banned word, the bot replies with a warning message.  
-You get to customise that message: serious or sassy.*  
-(There is a default message if you don’t set one, so don't worry!)
-
-But that’s not all. It does a whole lot more:
-
-- Every banned word spoken drops a user’s score.  
-- There’s a leaderboard  
-- Set punishments when someone hits a low enough score — reactions, cheeky replies, etc*  
-- Users can check their score or the leaderboard at any time.  
-- Users can *downvote* others' banned-word messages to bump their own score up.*  
-- Users can write a “banned word reflection” explaining themselves, post it to the channel, and if the community votes in favour, their score is reset*  
-- Banned words are case-insensitive by default — so *"Dog"*, *"dog"*, and *"DoG"* are all treated the same.  
-- Banned word checks ignore punctuation and spacing quirks, so users can't bypass bans with tricks like "d.o.g".
-
-
-## Commands
-
-These are the commands you can use with Word BAN:
-
-- `/ban-word [word]` – Bans a word in the channel it's run.  
-- `/unban-word [word]` – Unbans a word in the channel it's run.  
-- `/banned-words` – Lists banned words in the channel it's run.  
-- `/is-banned [word]` – Checks if a word is banned in the channel it's run.  
-- `/score` – View your score.  
-- `/naughty-leaderboard` – See who’s dodging the most banned words (or not).  
-- `/reflect [your message]` – Submit a reflection after using a banned word.*
-
-###### *Features marked with a star are still a work in progress.
+As I mentioned above, it just says this word x is banned when that word is banned. So obviously you can ban/unban words, but also you can see a score!  
+Yeah so I added a scoring system so your score goes down when you say a banned word, and theres a leaderboard too. That's about everything the bot does!
