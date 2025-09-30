@@ -26,7 +26,7 @@ def generate_leaderboard_blocks(scores: dict[str, int]) -> list:
     Given a dict of user_id -> score, returns Slack blocks showing top 10 users with their scores and mentions.
     """
     # Sort by score descending and take top 10
-    sorted_users = sorted(scores.items(), key=lambda x: x[1], reverse=True)[:10]
+    sorted_users = sorted(scores.items(), key=lambda x: x[1])[:10]
 
     blocks = [
         {
