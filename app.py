@@ -1,10 +1,11 @@
 import dbm
+import json
 import logging
 import os
 import re
 import time
-import json
-from threading import Lock, RLock
+from threading import RLock
+
 from dotenv import load_dotenv
 from slack_bolt import App
 from slack_bolt.adapter.socket_mode import SocketModeHandler
@@ -12,13 +13,13 @@ from slack_sdk.errors import SlackApiError
 
 load_dotenv()
 
-
 # --- Reflection and Score Caches (thread-safe) ---
 reflection_channel_id = ""
 reflections_cache = []
 scores_cache = {}
 scores_lock = RLock()
 reflections_lock = RLock()
+
 
 # Load all unprocessed reflections into memory
 def load_pending_reflections():
@@ -30,12 +31,14 @@ def load_pending_reflections():
                 loaded.append(record)
     return loaded
 
+
 def load_scores():
     loaded = {}
     with dbm.open("scores.db", "c") as db:
         for k, v in db.items():
             loaded[k.decode()] = int(v)
     return loaded
+
 
 reflections_cache = load_pending_reflections()
 scores_cache = load_scores()
@@ -48,7 +51,7 @@ app = App(
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
- # --- Initialise in-memory caches once ---
+# --- Initialise in-memory caches once ---
 # Thread-safe lock for banned words cache
 banned_lock = RLock()
 
@@ -66,7 +69,7 @@ def generate_leaderboard_blocks(scores: dict) -> list:
     Given a dict of user_id -> score, returns Slack blocks showing top 10 users with their scores and mentions.
     """
     # Sort by score descending and take top 10
-    sorted_users = sorted(scores.items(), key=lambda x: -x[1])[:10]
+    sorted_users = sorted(scores.items(), key=lambda x: -x[1], reverse=True)[:10]
 
     blocks = [
         {
@@ -116,6 +119,7 @@ def load_banned_words():
             chan, word = decoded.split(":", 1)
             cache.setdefault(chan, set()).add(word)
     return cache
+
 
 # Thread-safe banned words cache
 banned_words_cache = load_banned_words()
@@ -341,9 +345,9 @@ def reflection(ack, respond, body):
     with reflections_lock:
         for reflection in reflections_cache:
             if not reflection.get("processed", False) and reflection.get("user") == body["user_id"]:
-                respond("You already have a pending reflection. Please wait for it to be processed before submitting another.")
+                respond(
+                    "You already have a pending reflection. Please wait for it to be processed before submitting another.")
                 return
-
 
     app.client.views_open(
         trigger_id=body["trigger_id"],
@@ -519,6 +523,7 @@ def cancel_reflection(ack, body, client, logger):
 if __name__ == "__main__":
     import threading
 
+
     def process_pending_reflections():
         """
         Periodically checks for pending reflections and processes them.
@@ -557,7 +562,8 @@ if __name__ == "__main__":
                     response = client.conversations_open(users=reflection['user'])
                     dm_channel_id = response["channel"]["id"]
                     if upvotes > downvotes:
-                        logger.info(f"Majority agreed and upvoted the reflection by {reflection['user']} which was {reflection['reflection']}")
+                        logger.info(
+                            f"Majority agreed and upvoted the reflection by {reflection['user']} which was {reflection['reflection']}")
                         client.chat_postMessage(
                             channel=dm_channel_id,
                             text=f":whitecheckmark: Your reflection '{reflection['reflection']}' received more upvotes than downvotes! \n This means your score was reset to 0!"
@@ -570,13 +576,15 @@ if __name__ == "__main__":
                             except Exception as e:
                                 logger.error(f"Failed to reset score for {reflection['user']}: {e}")
                     elif downvotes > upvotes:
-                        logger.info(f"Majority disagreed and downvoted the reflection by {reflection['user']} which was {reflection['reflection']}")
+                        logger.info(
+                            f"Majority disagreed and downvoted the reflection by {reflection['user']} which was {reflection['reflection']}")
                         client.chat_postMessage(
                             channel=dm_channel_id,
                             text=f":x: Your reflection '{reflection['reflection']}' received more downvotes than upvotes! \n This means your score was not reset to 0 and instead remains the same. You may try again."
                         )
                     else:
-                        logger.info(f"The was a tie for the reflection by {reflection['user']} which was {reflection['reflection']}")
+                        logger.info(
+                            f"The was a tie for the reflection by {reflection['user']} which was {reflection['reflection']}")
                         client.chat_postMessage(
                             channel=dm_channel_id,
                             text=f"Your reflection '{reflection['reflection']}' received the same amount of upvotes and downvotes! \n This means your score stays the same. You may try again."
@@ -594,6 +602,7 @@ if __name__ == "__main__":
                 except Exception as e:
                     logger.error(f"Error processing reflection {reflection}: {e}")
             time.sleep(180)
+
 
     reflection_thread = threading.Thread(target=process_pending_reflections, daemon=True)
     reflection_thread.start()
