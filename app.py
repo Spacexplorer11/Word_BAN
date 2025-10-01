@@ -487,7 +487,7 @@ if __name__ == "__main__":
             now = time.time()
             to_process = []
             for reflection in reflections:
-                if not reflection.get("processed", False) and now > reflection["created_at"] + 10:
+                if not reflection.get("processed", False) and now > reflection["created_at"] + 86400:
                     to_process.append(reflection)
             for reflection in to_process:
                 try:
@@ -531,7 +531,7 @@ if __name__ == "__main__":
                             db[key] = json.dumps(reflection)
                 except Exception as e:
                     logger.error(f"Error processing reflection {reflection}: {e}")
-            time.sleep(10)
+            time.sleep(1800)
 
     reflection_thread = threading.Thread(target=process_pending_reflections, daemon=True)
     reflection_thread.start()
