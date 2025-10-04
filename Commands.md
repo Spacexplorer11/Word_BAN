@@ -8,3 +8,7 @@ These are the commands you can use with Word BAN:
 - `/is-banned [word]` – Checks if a word is banned in the channel it's run.  
 - `/score` – View your score.  
 - `/naughty-leaderboard` – See who’s using the most banned words. 
+- `/reflect` - Write a reflection and get the channel to upvote/downvote it! Your own votes and the bot's votes don't count.
+- - After 24 hours, the bot will tally the votes:
+- - If you get more upvotes than downvotes, your score resets to 0!
+- - On the other hand, if you get more downvotes than upvotes or its a tie, your score stays the same.
