@@ -3,6 +3,6 @@ charset-normalizer==3.4.2
 idna==3.10
 python-dotenv==1.1.1
 requests==2.32.4
-slack_bolt==1.23.0
+slack_bolt==1.25.0
 slack_sdk==3.35.0
 urllib3==2.5.0
