@@ -125,6 +125,23 @@ def load_banned_words():
 banned_words_cache = load_banned_words()
 
 
+@app.event("app_mention")
+def handle_mention_event(body, say, logger):
+    user_id = body["event"]["user"]
+    text = body["event"].get("text", "")
+    channel_id = body["event"]["channel"]
+
+    if user_id == "U08D22QNUVD":
+        say("Dear master <@U08D22QNUVD>, I bow down to you and thank you for creating me. I am nothing without you. Thank you master :cat-heart:")
+        return
+    if user_id == "U097SUCKJ90":
+        say("Hey! It's <@U097SUCKJ90>! The guy who made the stupid <@U09HGFV3S4A> bot who made an infinite loop with me! :siren-real: ARREST HIM!! :siren-real:")
+        return
+
+    logger.info(f"User {user_id} mentioned the bot in {channel_id}: {text}")
+    say(f"Oi <@{user_id}>! Why'd you mention me? I'm busy watching for banned words!")
+
+
 @app.command("/ban-word")
 def ban_word(ack, command, respond, body):
     ack()
@@ -224,11 +241,6 @@ def unban_word(ack, command, respond, body):
                 banned_words_cache.get(body["channel_id"], set()).discard(command["text"].strip().lower())
             logger.info(f"Unbanned word '{command['text'].strip()}' for channel {body['channel_id']}")
             respond(f"The word '{command['text'].strip()}' was unbanned.")
-
-
-@app.event("message")
-def handle_message_events(body, logger):
-    logger.info(body)
 
 
 @app.command("/banned-words")
