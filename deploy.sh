@@ -39,6 +39,11 @@ Restart=on-failure
 WantedBy=default.target
 EOF
 
+# Setting up stupid and weird env variables??
+echo "Setting up stupid and weird env variables??"
+export XDG_RUNTIME_DIR="/run/user/$(id -u)"
+export DBUS_SESSION_BUS_ADDRESS="unix:path=${XDG_RUNTIME_DIR}/bus"
+
 # 6. Reload systemd and restart the service.
 echo "--- Reloading systemd and restarting service... ---"
 loginctl enable-linger $(whoami) || true
