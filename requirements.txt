@@ -1,6 +1,6 @@
 certifi==2025.8.3
 charset-normalizer==3.4.3
-idna==3.10
+idna==3.11
 python-dotenv==1.1.1
 requests==2.32.5
 slack_bolt==1.26.0
