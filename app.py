@@ -139,7 +139,7 @@ def handle_mention_event(body, say, logger):
         say("Hey! It's <@U097SUCKJ90>! The guy who made the stupid <@U09HGFV3S4A> bot who made an infinite loop with me! :siren-real: ARREST HIM!! :siren-real:")
         return
     if user_id == "U09192704Q7":
-        say("Hey! It's <@U09192704Q7>! The guy who made the stupid worfklow in #arca who made an infinite loop with me! :siren-real: ARREST HIM!! :siren-real:")
+        say("Hey! It's <@U09192704Q7>! The guy who made the stupid workflow in #arca who made an infinite loop with me! :siren-real: ARREST HIM!! :siren-real:")
         return
 
     say(f"Oi <@{user_id}>! Why'd you mention me? I'm busy watching for banned words!")
