@@ -6,6 +6,7 @@ so I made a bot to automatically say "this word is banned".
 
 ## What commands are there?
 Check out the commands in [commands.md](Commands.md)!  
+Or just ping it (@Word Ban) and talk naturally and it will help you! (This feature is powered by ai.hackclub.com)
 
 ## What can it do?
 As I mentioned above, it just says this word x is banned when that word is banned. So obviously you can ban/unban words, but also you can see a score!  
