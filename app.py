@@ -76,13 +76,13 @@ def ai_request(prompt, context=""):
             model="google/gemini-2.5-flash",
             messages=[
                 {"role": "assistant",
-                 "content": f"{DEFAULT_PROMPT} User Prompt (+ a bit extra user metadata): {prompt} The last 10 messages in a list are: {context}"}
+                 "content": f"{DEFAULT_PROMPT} User Prompt (+ a bit extra user metadata): {prompt} The last 10 messages in a list are: {context} Please use these to adjust your output and how you respond."}
             ]
         )
         return response.choices[0].message.content
     elif whichClient == 2:
         response = model.generate_content(
-            f"{DEFAULT_PROMPT} User Prompt (+ a bit extra user metadata): {prompt} The last 10 messages in a list are: {context}")
+            f"{DEFAULT_PROMPT} User Prompt (+ a bit extra user metadata): {prompt} The last 10 messages in a list are: {context} Please use these to adjust your output and how you respond.")
         if response.candidates:
             return response.candidates[0].content.parts[0].text
         else:
