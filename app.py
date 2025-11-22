@@ -2,12 +2,14 @@ import dbm
 import json
 import logging
 import os
+import random
 import re
 import time
 from threading import RLock
 
 from dotenv import load_dotenv
 from openai import OpenAI
+import google.generativeai as genai
 from slack_bolt import App
 from slack_bolt.adapter.socket_mode import SocketModeHandler
 from slack_sdk.errors import SlackApiError
@@ -54,25 +56,37 @@ logger = logging.getLogger(__name__)
 
 # Akaalroop Intelligence trust trust
 
-AI_TOKEN = os.environ.get("AI_TOKEN")
-AI_MODEL = "google/gemini-2.5-flash"
-AI_URL = "https://ai.hackclub.com/proxy/v1"
+AI_TOKEN1 = os.environ.get("AI_TOKEN1")
+AI_TOKEN2 = os.environ.get("AI_TOKEN2")
+DEFAULT_PROMPT = "You are a bot called Word Ban. You are open source and your code is at https://github.com/Spacexplorer11/Word_BAN/ You are used to ban words in a Slack channel. Your creator is Akaalroop. He is 'spacexplorer11' on GitHub. His user id is 'U08D22QNUVD'. You can mention him by sending '<@U08D22QNUVD>'. You have a teenage boy personality. The user has given a prompt to you. Please respond appropriately as your response will be sent directly, word for word, to the user. Please keep responses short and conscise. Please use slack mrkdwn."
 
-client = OpenAI(
-    api_key=AI_TOKEN,
-    base_url=AI_URL
+client1 = OpenAI(
+    api_key=AI_TOKEN1,
+    base_url="https://ai.hackclub.com/proxy/v1"
 )
+
+genai.configure(api_key=AI_TOKEN2)
+model = genai.GenerativeModel("gemini-2.5-flash")
 
 
 def ai_request(prompt, context=""):
-    response = client.chat.completions.create(
-        model=AI_MODEL,
-        messages=[
-            {"role": "assistant",
-             "content": f"You are a bot called Word Ban. You are open source and your code is at https://github.com/Spacexplorer11/Word_BAN/ You are used to ban words in a Slack channel. Your creator is Akaalroop. He is 'spacexplorer11' on GitHub. His user id is 'U08D22QNUVD'. You can mention him by sending '<@U08D22QNUVD>'. You have a teenage boy personality. The user has given a prompt to you. Please respond appropriately as your response will be sent directly, word for word, to the user. Please keep responses short and conscise. Please use slack mrkdwn. User Prompt (+ a bit extra user metadata): {prompt} The last 10 messages in a list are: {context}"}
-        ]
-    )
-    return response.choices[0].message.content
+    whichClient = random.randint(1, 2)
+    if whichClient == 1:
+        response = client1.chat.completions.create(
+            model="google/gemini-2.5-flash",
+            messages=[
+                {"role": "assistant",
+                 "content": f"{DEFAULT_PROMPT} User Prompt (+ a bit extra user metadata): {prompt} The last 10 messages in a list are: {context}"}
+            ]
+        )
+        return response.choices[0].message.content
+    elif whichClient == 2:
+        response = model.generate_content(
+            f"{DEFAULT_PROMPT} User Prompt (+ a bit extra user metadata): {prompt} The last 10 messages in a list are: {context}")
+        if response.candidates:
+            return response.candidates[0].content.parts[0].text
+        else:
+            return "I'm sorry, I couldn't generate a response at this time."
 
 
 # --- Initialise in-memory caches once ---
@@ -176,8 +190,6 @@ def handle_mention_event(body, say, logger, client):
         inclusive=True,
         limit=10
     )
-
-    print(context)
 
     if command == "MESSAGE":
         pass
