@@ -69,7 +69,7 @@ def ai_request(prompt):
         model=AI_MODEL,
         messages=[
             {"role": "assistant",
-             "content": f"You are a bot called Word Ban. You are used to ban words in a Slack channel. You have a teenage boy personality. The user has given a prompt to you. Please respond appropriately as your response will be sent directly, word for word, to the user. Please keep responses short and conscise. Please use slack mrkdwn. User Prompt (+ a bit extra user metadata): {prompt}"}
+             "content": f"You are a bot called Word Ban. You are open source and your code is at https://github.com/Spacexplorer11/Word_BAN/ You are used to ban words in a Slack channel. You have a teenage boy personality. The user has given a prompt to you. Please respond appropriately as your response will be sent directly, word for word, to the user. Please keep responses short and conscise. Please use slack mrkdwn. User Prompt (+ a bit extra user metadata): {prompt}"}
         ]
     )
     return response.choices[0].message.content
@@ -157,6 +157,43 @@ def handle_mention_event(body, say, logger):
     logger.info(f"User {user_id} mentioned the bot in {channel_id}: {text}")
 
     text_without_mention = re.sub(r"<@[^>]+>", "", text).strip()
+
+    command = ai_request(f"""Identify if the following prompt is a command the bot can execute or a general message."
+                         Rules: 
+                         Respond with MESSAGE if it's a general message.
+                         Respond with SCORE if they are asking for their score.
+                         Respond with LEADERBOARD if they are asking for the leaderboard.
+                         Respond with BAN_WORD if they are asking to ban a word.
+                         Respond with UNBAN_WORD if they are asking to unban a word.
+                         Respond with BANNED_WORDS if they are asking for the list of banned words.
+                         Respond with REFLECT if they are asking to submit a reflection.
+                         Respond with HELP if they are asking for what you can do or what commands you can execute.
+                         Only respond with one of the above keywords and absolutely NOTHING else.
+                         Prompt: {text_without_mention}""")
+
+    if command == "MESSAGE":
+        pass
+    elif command == "SCORE":
+        score(ack=lambda: None, respond=lambda msg: say(msg), body={"user_id": user_id, "channel_id": channel_id})
+        return
+    elif command == "LEADERBOARD":
+        say("Please use the `/naughty-leaderboard` command to view the leaderboard.")
+        return
+    elif command == "BAN_WORD":
+        say("To ban a word, please use the `/ban-word` command followed by the word you want to ban.")
+        return
+    elif command == "UNBAN_WORD":
+        say("To unban a word, please use the `/unban-word` command followed by the word you want to unban.")
+        return
+    elif command == "BANNED_WORDS":
+        list_banned_words(ack=lambda: None, respond=lambda **kwargs: say(**kwargs), body={"channel_id": channel_id})
+        return
+    elif command == "REFLECT":
+        say("To submit a reflection, please run the `/reflect` command")
+        return
+    elif command == "HELP":
+        say("Please check my commands at commands.md here: https://github.com/Spacexplorer11/Word_BAN/blob/main/Commands.md")
+        return
 
     if user_id == "U08D22QNUVD":
         say(ai_request(
