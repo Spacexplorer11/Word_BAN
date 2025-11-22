@@ -7,10 +7,10 @@ import time
 from threading import RLock
 
 from dotenv import load_dotenv
+from openai import OpenAI
 from slack_bolt import App
 from slack_bolt.adapter.socket_mode import SocketModeHandler
 from slack_sdk.errors import SlackApiError
-from openai import OpenAI
 
 load_dotenv()
 
@@ -66,10 +66,11 @@ client = OpenAI(
 
 def ai_request(prompt):
     response = client.chat.completions.create(
-            model=AI_MODEL,
-            messages=[
-                {"role": "assistant", "content": f"You are a bot called Word Ban. You are used to ban words in a Slack channel. You have a teenage boy personality. The user has given a prompt to you. Please respond appropriately as your response will be sent directly, word for word, to the user. Please keep responses short and conscise. Please use slack mrkdwn. User Prompt (+ a bit extra user metadata): {prompt}"}
-            ]
+        model=AI_MODEL,
+        messages=[
+            {"role": "assistant",
+             "content": f"You are a bot called Word Ban. You are used to ban words in a Slack channel. You have a teenage boy personality. The user has given a prompt to you. Please respond appropriately as your response will be sent directly, word for word, to the user. Please keep responses short and conscise. Please use slack mrkdwn. User Prompt (+ a bit extra user metadata): {prompt}"}
+        ]
     )
     return response.choices[0].message.content
 
@@ -170,8 +171,8 @@ def handle_mention_event(body, say, logger):
             f"User {user_id} said {text_without_mention}. Refer to them as <@{user_id}> in your final output. This is a friend of the creator of you (word ban) please talk to him with a touch of sass."))
         return
 
-    say(ai_request(f"User {user_id} said {text_without_mention}. Respond appropriately to the prompt. Refer to them as <@{user_id}> in your final output."))
-
+    say(ai_request(
+        f"User {user_id} said {text_without_mention}. Respond appropriately to the prompt. Refer to them as <@{user_id}> in your final output."))
 
 
 @app.command("/ban-word")
