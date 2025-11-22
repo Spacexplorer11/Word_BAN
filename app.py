@@ -64,12 +64,12 @@ client = OpenAI(
 )
 
 
-def ai_request(prompt):
+def ai_request(prompt, context=""):
     response = client.chat.completions.create(
         model=AI_MODEL,
         messages=[
             {"role": "assistant",
-             "content": f"You are a bot called Word Ban. You are open source and your code is at https://github.com/Spacexplorer11/Word_BAN/ You are used to ban words in a Slack channel. You have a teenage boy personality. The user has given a prompt to you. Please respond appropriately as your response will be sent directly, word for word, to the user. Please keep responses short and conscise. Please use slack mrkdwn. User Prompt (+ a bit extra user metadata): {prompt}"}
+             "content": f"You are a bot called Word Ban. You are open source and your code is at https://github.com/Spacexplorer11/Word_BAN/ You are used to ban words in a Slack channel. Your creator is Akaalroop. He is 'spacexplorer11' on GitHub. His user id is 'U08D22QNUVD'. You can mention him by sending '<@U08D22QNUVD>'. You have a teenage boy personality. The user has given a prompt to you. Please respond appropriately as your response will be sent directly, word for word, to the user. Please keep responses short and conscise. Please use slack mrkdwn. User Prompt (+ a bit extra user metadata): {prompt} The last 10 messages in a list are: {context}"}
         ]
     )
     return response.choices[0].message.content
@@ -150,7 +150,7 @@ banned_words_cache = load_banned_words()
 
 
 @app.event("app_mention")
-def handle_mention_event(body, say, logger):
+def handle_mention_event(body, say, logger, client):
     user_id = body["event"]["user"]
     text = body["event"].get("text", "")
     channel_id = body["event"]["channel"]
@@ -170,6 +170,14 @@ def handle_mention_event(body, say, logger):
                          Respond with HELP if they are asking for what you can do or what commands you can execute.
                          Only respond with one of the above keywords and absolutely NOTHING else.
                          Prompt: {text_without_mention}""")
+
+    context = client.conversations_history(
+        channel=channel_id,
+        inclusive=True,
+        limit=10
+    )
+
+    print(context)
 
     if command == "MESSAGE":
         pass
@@ -197,19 +205,23 @@ def handle_mention_event(body, say, logger):
 
     if user_id == "U08D22QNUVD":
         say(ai_request(
-            f"User {user_id} said {text_without_mention}. Refer to them as <@{user_id}> in your final output. This is the creator of you (word ban) please talk to him respectfully and nicely. Please respond as if you are owned by him and serve him."))
+            f"User {user_id} said {text_without_mention}. Refer to them as <@{user_id}> in your final output. This is the creator of you (word ban) please talk to him respectfully and nicely. Please respond as if you are owned by him and serve him.",
+            context))
         return
     elif user_id == "U097SUCKJ90":
         say(ai_request(
-            f"User {user_id} said {text_without_mention}. Refer to them as <@{user_id}> in your final output. This is the best friend of the creator of you (word ban) please talk to him with extreme sass and cheekiness. Please respond as if you are dislike him in a bantery way."))
+            f"User {user_id} said {text_without_mention}. Refer to them as <@{user_id}> in your final output. This is the best friend of the creator of you (word ban) please talk to him with extreme sass and cheekiness. Please respond as if you are dislike him in a bantery way.",
+            context))
         return
     elif user_id == "U09192704Q7":
         say(ai_request(
-            f"User {user_id} said {text_without_mention}. Refer to them as <@{user_id}> in your final output. This is a friend of the creator of you (word ban) please talk to him with a touch of sass."))
+            f"User {user_id} said {text_without_mention}. Refer to them as <@{user_id}> in your final output. This is a friend of the creator of you (word ban) please talk to him with a touch of sass.",
+            context))
         return
 
     say(ai_request(
-        f"User {user_id} said {text_without_mention}. Respond appropriately to the prompt. Refer to them as <@{user_id}> in your final output."))
+        f"User {user_id} said {text_without_mention}. Respond appropriately to the prompt. Refer to them as <@{user_id}> in your final output.",
+        context))
 
 
 @app.command("/ban-word")
