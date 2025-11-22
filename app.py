@@ -10,6 +10,7 @@ from dotenv import load_dotenv
 from slack_bolt import App
 from slack_bolt.adapter.socket_mode import SocketModeHandler
 from slack_sdk.errors import SlackApiError
+from openai import OpenAI
 
 load_dotenv()
 
@@ -50,6 +51,28 @@ app = App(
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
+# Akaalroop Intelligence trust trust
+
+AI_TOKEN = os.environ.get("AI_TOKEN")
+AI_MODEL = "google/gemini-2.5-flash"
+AI_URL = "https://ai.hackclub.com/proxy/v1"
+
+client = OpenAI(
+    api_key=AI_TOKEN,
+    base_url=AI_URL
+)
+
+
+def ai_request(prompt):
+    response = client.chat.completions.create(
+            model=AI_MODEL,
+            messages=[
+                {"role": "assistant", "content": f"You are a bot called Word Ban. You are used to ban words in a Slack channel. You have a teenage boy personality. The user has given a prompt to you. Please respond appropriately as your response will be sent directly, word for word, to the user. Please keep responses short and conscise. Please use slack mrkdwn. User Prompt (+ a bit extra user metadata): {prompt}"}
+            ]
+    )
+    return response.choices[0].message.content
+
 
 # --- Initialise in-memory caches once ---
 # Thread-safe lock for banned words cache
@@ -132,17 +155,23 @@ def handle_mention_event(body, say, logger):
     channel_id = body["event"]["channel"]
     logger.info(f"User {user_id} mentioned the bot in {channel_id}: {text}")
 
+    text_without_mention = re.sub(r"<@[^>]+>", "", text).strip()
+
     if user_id == "U08D22QNUVD":
-        say("Dear master <@U08D22QNUVD>, I bow down to you and thank you for creating me. I am nothing without you. Thank you master :cat-heart:")
+        say(ai_request(
+            f"User {user_id} said {text_without_mention}. Refer to them as <@{user_id}> in your final output. This is the creator of you (word ban) please talk to him respectfully and nicely. Please respond as if you are owned by him and serve him."))
         return
-    if user_id == "U097SUCKJ90":
-        say("Hey! It's <@U097SUCKJ90>! The guy who made the stupid <@U09HGFV3S4A> bot who made an infinite loop with me! :siren-real: ARREST HIM!! :siren-real:")
+    elif user_id == "U097SUCKJ90":
+        say(ai_request(
+            f"User {user_id} said {text_without_mention}. Refer to them as <@{user_id}> in your final output. This is the best friend of the creator of you (word ban) please talk to him with extreme sass and cheekiness. Please respond as if you are dislike him in a bantery way."))
         return
-    if user_id == "U09192704Q7":
-        say("Hey! It's <@U09192704Q7>! The guy who made the stupid workflow in #arca who made an infinite loop with me! :siren-real: ARREST HIM!! :siren-real:")
+    elif user_id == "U09192704Q7":
+        say(ai_request(
+            f"User {user_id} said {text_without_mention}. Refer to them as <@{user_id}> in your final output. This is a friend of the creator of you (word ban) please talk to him with a touch of sass."))
         return
 
-    say(f"Oi <@{user_id}>! Why'd you mention me? I'm busy watching for banned words!")
+    say(ai_request(f"User {user_id} said {text_without_mention}. Respond appropriately to the prompt. Refer to them as <@{user_id}> in your final output."))
+
 
 
 @app.command("/ban-word")
