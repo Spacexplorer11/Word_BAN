@@ -272,7 +272,6 @@ def handle_message_events(logger, message, say, client):
 
     # Flatten message: lowercase, strip all non-alphanumeric and non-colon characters (removes underscores, dashes, etc.), no whitespace removal
     flattened = re.sub(r"[^a-zA-Z0-9:]", "", raw_text.lower())
-    logger.info(f"Message after processing in {channel_id}: {flattened}")
 
     penalised = False
     with banned_lock:
@@ -293,7 +292,6 @@ def handle_message_events(logger, message, say, client):
                     thread_ts=message.get("ts")
                 )
                 logger.info(f"Penalised {user_id} for '{word}' in {channel_id}")
-                penalised = True
                 break
     # Ensure user has a score entry in cache
     with scores_lock:
@@ -305,11 +303,6 @@ def handle_message_events(logger, message, say, client):
             except Exception as e:
                 logger.error(f"Failed to initialize score for {user_id}: {e}")
     # Reflection processing is now handled in a background scheduler.
-
-
-@app.event("message")
-def log_message_event(body, logger):
-    logger.info(f"Raw event payload: {body}")
 
 
 @app.command("/unban-word")
