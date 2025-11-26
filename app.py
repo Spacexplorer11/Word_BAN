@@ -191,29 +191,30 @@ def handle_mention_event(body, say, logger, client):
         limit=10
     )
 
-    if command == "MESSAGE":
-        pass
-    elif command == "SCORE":
-        score(ack=lambda: None, respond=lambda msg: say(msg), body={"user_id": user_id, "channel_id": channel_id})
-        return
-    elif command == "LEADERBOARD":
-        say("Please use the `/naughty-leaderboard` command to view the leaderboard.")
-        return
-    elif command == "BAN_WORD":
-        say("To ban a word, please use the `/ban-word` command followed by the word you want to ban.")
-        return
-    elif command == "UNBAN_WORD":
-        say("To unban a word, please use the `/unban-word` command followed by the word you want to unban.")
-        return
-    elif command == "BANNED_WORDS":
-        list_banned_words(ack=lambda: None, respond=lambda **kwargs: say(**kwargs), body={"channel_id": channel_id})
-        return
-    elif command == "REFLECT":
-        say("To submit a reflection, please run the `/reflect` command")
-        return
-    elif command == "HELP":
-        say("Please check my commands at commands.md here: https://github.com/Spacexplorer11/Word_BAN/blob/main/Commands.md")
-        return
+    match command:
+        case "MESSAGE":
+            pass
+        case "SCORE":
+            score(ack=lambda: None, respond=lambda msg: say(msg), body={"user_id": user_id, "channel_id": channel_id})
+            return
+        case "LEADERBOARD":
+            say("Please use the `/naughty-leaderboard` command to view the leaderboard.")
+            return
+        case "BAN_WORD":
+            say("To ban a word, please use the `/ban-word` command followed by the word you want to ban.")
+            return
+        case "UNBAN_WORD":
+            say("To unban a word, please use the `/unban-word` command followed by the word you want to unban.")
+            return
+        case "BANNED_WORDS":
+            list_banned_words(ack=lambda: None, respond=lambda **kwargs: say(**kwargs), body={"channel_id": channel_id})
+            return
+        case "REFLECT":
+            say("To submit a reflection, please run the `/reflect` command")
+            return
+        case "HELP":
+            say("Please check my commands at commands.md here: https://github.com/Spacexplorer11/Word_BAN/blob/main/Commands.md")
+            return
 
     if user_id == "U08D22QNUVD":
         say(ai_request(
