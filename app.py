@@ -269,7 +269,7 @@ PARAMS: <params or none>
 REASONING: <one sentence explaining your decision>
 """
 
-    # Use a deterministic approach for action decisions
+    # Use Gemini model for consistent action decision-making
     response = model.generate_content(decision_prompt)
     if response.candidates:
         result = response.candidates[0].content.parts[0].text.strip()
@@ -337,7 +337,7 @@ def execute_autonomous_action(action, params, channel_id, user_id, client, say_f
         return "_[No words are currently banned in this channel]_"
     
     elif action == "GET_SCORE":
-        target_user = params.strip() if params else user_id
+        target_user = params.strip() if params and params.strip() else user_id
         with scores_lock:
             user_score = scores_cache.get(target_user, 0)
         return f"_[Score for <@{target_user}>: {user_score}]_"
@@ -448,11 +448,19 @@ def handle_mention_event(body, say, logger, client):
     text_without_mention = re.sub(r"<@[^>]+>", "", text).strip()
 
     # Gather context for self-aware decision making
-    context = client.conversations_history(
+    context_response = client.conversations_history(
         channel=channel_id,
         inclusive=True,
         limit=10
     )
+    # Extract message texts for AI context
+    context_messages = []
+    if context_response and context_response.get("messages"):
+        for msg in context_response["messages"]:
+            msg_text = msg.get("text", "")
+            msg_user = msg.get("user", "unknown")
+            context_messages.append(f"<@{msg_user}>: {msg_text}")
+    context = "\n".join(context_messages)
     
     # Build channel state for full awareness
     with banned_lock:
