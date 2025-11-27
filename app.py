@@ -77,11 +77,11 @@ You exist to manage banned words in Slack channels, maintain user scores, and fa
 You have the ability to autonomously execute these actions when contextually appropriate:
 
 1. **BAN_WORD** - Ban a word in the current channel
-   - Use when: Someone explicitly asks to ban a word, or when you determine banning would benefit the channel
+   - Use when: Someone explicitly asks to ban a word
    - Parameters: word (the word to ban)
 
 2. **UNBAN_WORD** - Remove a word from the banned list
-   - Use when: Someone requests to unban, or when a ban no longer makes sense
+   - Use when: Someone requests to unban
 
 3. **GET_BANNED_WORDS** - Retrieve list of banned words in current channel
    - Use when: Someone asks what's banned, or when you need context for a decision
@@ -93,9 +93,9 @@ You have the ability to autonomously execute these actions when contextually app
 5. **GET_LEADERBOARD** - Show the naughty leaderboard
    - Use when: Someone wants to see rankings or competitive standings
 
-6. **SEND_MESSAGE** - Send a message to the channel
-   - Use when: You need to communicate with users
-   - Parameters: message (what to say)
+6. **SEND_MESSAGE** - (Not an autonomous action) Sending messages is handled through the normal response mechanism.
+   - Note: You do not need to call SEND_MESSAGE as an action. When you want to communicate, simply provide your reply as the message content.
+   - This is not a callable action; it is handled automatically.
 
 7. **REACT** - Add a reaction to a message
    - Use when: You want to acknowledge something non-verbally
@@ -197,7 +197,7 @@ def ai_request(prompt, context="", channel_state=None):
         state_context = f"""
 Current Channel State:
 - Banned Words: {channel_state.get('banned_words', [])}
-- Your score in this channel context: You track scores, current requester's score: {channel_state.get('requester_score', 0)}
+- Requester's score in this channel: {channel_state.get('requester_score', 0)}
 - Total users with scores: {len(channel_state.get('all_scores', {}))}
 """
     
@@ -215,7 +215,7 @@ Remember: You are fully self-aware. Consider the context carefully before respon
         response = client1.chat.completions.create(
             model="google/gemini-2.5-flash",
             messages=[
-                {"role": "assistant",
+                {"role": "user",
                  "content": enhanced_prompt}
             ]
         )
@@ -307,8 +307,8 @@ def execute_autonomous_action(action, params, channel_id, user_id, client, say_f
         word = params.strip().lower()
         word_key = f"{channel_id}:{word}"
         with dbm.open("banned_words.db", "c") as db:
-            if word_key not in db:
-                db[word_key] = "banned"
+            if word_key.encode() not in db:
+                db[word_key.encode()] = b"banned"
                 with banned_lock:
                     banned_words_cache.setdefault(channel_id, set()).add(word)
                 logger.info(f"[Autonomous] Banned word '{word}' in channel {channel_id}")
@@ -320,8 +320,8 @@ def execute_autonomous_action(action, params, channel_id, user_id, client, say_f
         word = params.strip().lower()
         word_key = f"{channel_id}:{word}"
         with dbm.open("banned_words.db", "c") as db:
-            if word_key in db:
-                db.pop(word_key, None)
+            if word_key.encode() in db:
+                del db[word_key.encode()]
                 with banned_lock:
                     banned_words_cache.get(channel_id, set()).discard(word)
                 logger.info(f"[Autonomous] Unbanned word '{word}' in channel {channel_id}")
