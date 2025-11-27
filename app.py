@@ -249,6 +249,10 @@ def ban_word(ack, command, respond, body):
             logger.warning(f"No word provided by {body['user_id']} in channel {body['channel_id']}")
             respond("Please provide a word to ban.")
             return
+        if len(word_key) < 2:
+            logger.warning(f"Word provided by {body['user_id']} in channel {body['channel_id']} is too short")
+            respond("Please provide a longer word (3+ chars) to ban.")
+            return
         if word_key in db:
             logger.info(f"Word '{command['text'].strip()}' already banned in {body['channel_id']}")
             respond(f"The word '{command['text'].strip()}' is already banned.")
