@@ -12,7 +12,7 @@ These are the commands you can use with Word BAN:
 - `/reflect` - Write a reflection and get the channel to upvote/downvote it! Your own votes and the bot's votes don't count.
   - After 24 hours, the bot will tally the votes:
   - If you get more upvotes than downvotes, your score resets to 0!
-  - On the other hand, if you get more downvotes than upvotes or its a tie, your score stays the same.
+  - On the other hand, if you get more downvotes than upvotes or it's a tie, your score stays the same.
 
 ### MCP-like Self-Awareness Features
 - `/self-awareness` – Let the bot introspect and explain its current state, capabilities, and decision-making process.
