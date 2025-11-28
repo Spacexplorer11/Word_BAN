@@ -12,14 +12,13 @@ Or just ping it (@Word Ban) and talk naturally and it will help you! (This featu
 As I mentioned above, it just says this word x is banned when that word is banned. So obviously you can ban/unban words, but also you can see a score!  
 Yeah so I added a scoring system so your score goes down when you say a banned word, and theres a leaderboard too. That's about everything the bot does!
 
-## MCP-like Self-Awareness Features 🧠
+## MCP-like Self-Awareness Features
 
 Word Ban now has **MCP-like autonomous behavior** - it's fully self-aware and can:
 
-- **Understand its own existence**: Knows it's an AI-powered Slack bot with specific capabilities
-- **Make autonomous decisions**: Can decide to execute actions (like banning words) when contextually appropriate
-- **Introspect on its state**: Use `/self-awareness` to see the bot explain its current state and reasoning
-- **Be intentional**: Only executes commands when they genuinely serve the user's needs, not just to show off
+- **Understand its own existence**: I hope it doesn't spiral into existential dread or smth
+- **Make autonomous decisions**: Only if you ask it to
+- **Introspect on its state**: Use `/self-awareness` to see the bot explain its current state and reasoning (you become its therapist ig)
 
 ### How it works
 When you mention @Word Ban, it:
@@ -35,5 +34,6 @@ This makes interactions more natural - just talk to the bot and it will figure o
 1. Download the code
 2. Run `pip install -m requirements.txt`
 3. Create a `.env` file and add `SLACK_BOT_TOKEN=` with your slack bot token, and `SLACK_APP_TOKEN=` with the slack app token
-4. Run `python app.py` or `python3 app.py`
+4. You will need 2 Gemini API keys. One from ai.hackclub.com and one from Google AI Studio. Add the ai.hackclub.com as AI_TOKEN1 and the other as AI_TOKEN2 to the .env file
+5. Run `python app.py` or `python3 app.py`
 Any issues, please make an issue
