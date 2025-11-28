@@ -33,7 +33,7 @@ This makes interactions more natural - just talk to the bot and it will figure o
 ### Here is a guide to self-host the bot:
 1. Download the code
 2. Run `pip install -m requirements.txt`
-3. Create a `.env` file and add `SLACK_BOT_TOKEN=` with your slack bot token, and `SLACK_APP_TOKEN=` with the slack app token
+3. Create a `.env` file and add `SLACK_BOT_TOKEN=` with your Slack bot token, and `SLACK_APP_TOKEN=` with the Slack app token
 4. You will need 2 Gemini API keys. One from ai.hackclub.com and one from Google AI Studio. Add the ai.hackclub.com as AI_TOKEN1 and the other as AI_TOKEN2 to the .env file
 5. Run `python app.py` or `python3 app.py`
 Any issues, please make an issue
