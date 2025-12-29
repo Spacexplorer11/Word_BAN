@@ -66,14 +66,14 @@ client1 = OpenAI(
 )
 
 genai.configure(api_key=AI_TOKEN2)
-model = genai.GenerativeModel("gemini-2.5-flash")
+model = genai.GenerativeModel("gemini-3-flash-preview")
 
 
 def ai_request(prompt, context=""):
     whichClient = random.randint(1, 2)
     if whichClient == 1:
         response = client1.chat.completions.create(
-            model="google/gemini-2.5-flash",
+            model="google/gemini-3-flash-preview",
             messages=[
                 {"role": "assistant",
                  "content": f"{DEFAULT_PROMPT} User Prompt (+ a bit extra user metadata): {prompt} The last 10 messages in a list are: {context} Please use these to adjust your output and how you respond."}
@@ -87,6 +87,8 @@ def ai_request(prompt, context=""):
             return response.candidates[0].content.parts[0].text
         else:
             return "I'm sorry, I couldn't generate a response at this time."
+    else:
+        return "I'm sorry, I couldn't generate a response at this time."
 
 
 # --- Initialise in-memory caches once ---
@@ -265,7 +267,7 @@ def ban_word(ack, command, respond, body):
             respond(f"The word '{command['text'].strip()}' has been banned.")
 
 
-@app.message()
+@app.event("message")
 def handle_message_events(logger, message, say, client):
     """
     Handles incoming messages and checks for banned words and emojis.

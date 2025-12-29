@@ -17,5 +17,6 @@ Yeah so I added a scoring system so your score goes down when you say a banned w
 1. Download the code
 2. Run `pip install -m requirements.txt`
 3. Create a `.env` file and add `SLACK_BOT_TOKEN=` with your slack bot token, and `SLACK_APP_TOKEN=` with the slack app token
-4. Run `python app.py` or `python3 app.py`
+4. You also need an API key from ai.hackclub.com as AI_TOKEN1 and an API Key from aistudio.google.com as AI_TOKEN2 in the env file
+5. Run `python app.py` or `python3 app.py`
 Any issues, please make an issue
