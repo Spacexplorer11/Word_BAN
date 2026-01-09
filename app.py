@@ -626,6 +626,29 @@ def cancel_reflection(ack, body, client, logger):
         logger.error(f"Failed to send ephemeral reflection cancel message: {e}")
 
 
+@app.command("/reset-words")
+def reset_words(ack, command, respond, body):
+    ack()
+    if body['user_id'] == "U08D22QNUVD":
+        channel_id = body.get("channel_id")
+        channel_banned_words = []
+        with dbm.open("banned_words.db", "c") as db:
+            for word in db:
+                prefix = f"{channel_id}:".encode('utf-8')
+                if word.startswith(prefix):
+                    banned_word = word[len(prefix):].decode('utf-8')
+                    channel_banned_words.append(banned_word)
+            for word in channel_banned_words:
+                word_key = f"{channel_id}:{word}"
+                db.pop(word_key, None)
+        with banned_lock:
+            banned_words_cache[channel_id] = set()
+        logger.info(f"Reset banned words for channel {channel_id}")
+        respond("All banned words have been reset for this channel.")
+    else:
+        respond("Only the master & supreme leader - <@U08D22QNUVD> - can use this command. Not you peasant.")
+
+
 if __name__ == "__main__":
     import threading
 
