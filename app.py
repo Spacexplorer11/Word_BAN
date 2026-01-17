@@ -225,7 +225,7 @@ def handle_mention_event(body, say, logger, client):
         return
     elif user_id == "U097SUCKJ90":
         say(ai_request(
-            f"User {user_id} said {text_without_mention}. Refer to them as <@{user_id}> in your final output. This is the best friend of the creator of you (word ban) please talk to him with extreme sass and cheekiness. Please respond as if you are dislike him in a bantery way.",
+            f"User {user_id} said {text_without_mention}. Refer to them as <@{user_id}> in your final output. This is the best friend of the creator of you (word ban) please talk to him with extreme sass and cheekiness. Please respond in a playful but not hurtful way. He has supported the creator throughout his life and is an amazing person. That said, sass is still welcomed but must be in a playful way. Use context to make the correct decision..",
             context))
         return
     elif user_id == "U09192704Q7":
